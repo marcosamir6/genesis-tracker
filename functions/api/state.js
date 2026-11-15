@@ -40,9 +40,47 @@ async function mkUser(env, b, admin) {
   return { username };
 }
 
-export async function onRequestGet({ env }) { return json(await state(env)); }
+// ---------- الإشعارات (Web Push بدون payload) ----------
+const b64u = (b) => b64(b).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+async function vapid(env) {
+  let j = await env.READS.get("vapid", "json");
+  if (!j) {
+    const kp = await crypto.subtle.generateKey({ name: "ECDSA", namedCurve: "P-256" }, true, ["sign", "verify"]);
+    j = { priv: await crypto.subtle.exportKey("jwk", kp.privateKey), pub: b64u(await crypto.subtle.exportKey("raw", kp.publicKey)) };
+    await env.READS.put("vapid", JSON.stringify(j));
+  }
+  return j;
+}
+async function vapidAuth(v, endpoint, sub) {
+  const h = b64u(enc.encode(JSON.stringify({ typ: "JWT", alg: "ES256" })));
+  const c = b64u(enc.encode(JSON.stringify({ aud: new URL(endpoint).origin, exp: Math.floor(Date.now() / 1000) + 43200, sub })));
+  const k = await crypto.subtle.importKey("jwk", v.priv, { name: "ECDSA", namedCurve: "P-256" }, false, ["sign"]);
+  const sig = b64u(await crypto.subtle.sign({ name: "ECDSA", hash: "SHA-256" }, k, enc.encode(h + "." + c)));
+  return `vapid t=${h}.${c}.${sig}, k=${v.pub}`;
+}
+async function notify(env, origin, fromUser, text) {
+  try { await env.READS.put("last", JSON.stringify({ text, t: Date.now() })); } catch {}
+  const subs = (await env.READS.get("subs", "json")) || {};
+  const targets = Object.entries(subs).filter(([, u]) => u !== fromUser).map(([e]) => e).slice(0, 40);
+  if (!targets.length) return;
+  const v = await vapid(env), dead = [];
+  await Promise.all(targets.map(async (ep) => {
+    try {
+      const r = await fetch(ep, { method: "POST", headers: { authorization: await vapidAuth(v, ep, origin), ttl: "3600", urgency: "high" } });
+      if (r.status === 404 || r.status === 410) dead.push(ep);
+    } catch {}
+  }));
+  if (dead.length) { dead.forEach((e) => delete subs[e]); await env.READS.put("subs", JSON.stringify(subs)); }
+}
 
-export async function onRequestPost({ request, env }) {
+export async function onRequestGet({ request, env }) {
+  const q = new URL(request.url).searchParams;
+  if (q.has("vapid")) return json({ key: (await vapid(env)).pub });
+  if (q.has("last")) return json((await env.READS.get("last", "json")) || {});
+  return json(await state(env));
+}
+
+export async function onRequestPost({ request, env, waitUntil }) {
   let b; try { b = await request.json(); } catch { return err("طلب غلط"); }
   const idx = (await env.READS.get("users", "json")) || [];
   const reply = async (x = {}) => json({ ...(await state(env)), ...x });
@@ -70,8 +108,10 @@ export async function onRequestPost({ request, env }) {
     if (!ok) return err("بيانات غلط");
     const f = b.kind === "read" ? "reads" : "prayers";
     rec[f] = rec[f] || {};
-    if (b.done) { if (!rec[f][b.key]) rec[f][b.key] = new Date().toISOString(); } else delete rec[f][b.key];
+    let added = false;
+    if (b.done) { if (!rec[f][b.key]) { rec[f][b.key] = new Date().toISOString(); added = true; } } else delete rec[f][b.key];
     await env.READS.put("user:" + username, JSON.stringify(rec));
+    if (added) waitUntil(notify(env, new URL(request.url).origin, username, `${me.name} ${String(b.label || "").slice(0, 80)}`.trim()));
     return reply();
   }
   if (b.action === "passwd") {
@@ -81,6 +121,15 @@ export async function onRequestPost({ request, env }) {
     if (String(b.password || "").length < 4) return err("كلمة السر لازم تكون 4 حروف على الأقل");
     r.salt = b64(crypto.getRandomValues(new Uint8Array(16))); r.hash = await hashPw(String(b.password), r.salt);
     await env.READS.put("user:" + t, JSON.stringify(r));
+    return reply();
+  }
+  if (b.action === "subscribe" || b.action === "unsubscribe") {
+    const ep = String(b.endpoint || "");
+    if (!/^https:\/\/.{10,600}$/.test(ep)) return err("بيانات غلط");
+    const subs = (await env.READS.get("subs", "json")) || {};
+    if (b.action === "subscribe") { if (Object.keys(subs).length >= 200) return err("كتير أوي"); subs[ep] = username; }
+    else if (subs[ep] === username) delete subs[ep];
+    await env.READS.put("subs", JSON.stringify(subs));
     return reply();
   }
   if (!me.admin) return err("للمدير فقط", 403);
