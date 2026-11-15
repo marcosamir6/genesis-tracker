@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "dev.pages.genesis_tracker.bb0e39fb.twa",
+        "sha256_cert_fingerprints": ["14:22:54:A5:C5:E6:EC:E7:46:54:30:33:5B:C8:DE:51:97:DC:7A:AC:AC:8F:B2:BA:89:D3:86:7F:7F:90:56:30"]
+      }
+    }]
