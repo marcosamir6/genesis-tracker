@@ -79,8 +79,41 @@ async function notify(env, origin, from, text, to) {
   if (dead.length) { dead.forEach((e) => delete subs[e]); await env.READS.put("subs", JSON.stringify(subs)); }
 }
 
+// ---------- الجدولة (بيناديها خدمة cron خارجية كل دقيقة) ----------
+async function cronKey(env) {
+  let k = await env.READS.get("cronkey");
+  if (!k) { k = b64u(crypto.getRandomValues(new Uint8Array(24))); await env.READS.put("cronkey", k); }
+  return k;
+}
+function cairo(back = 0) {
+  const p = Object.fromEntries(new Intl.DateTimeFormat("en-GB", { timeZone: "Africa/Cairo", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", weekday: "short", hourCycle: "h23" }).formatToParts(new Date(Date.now() - back * 60000)).map((x) => [x.type, x.value]));
+  return { date: `${p.year}-${p.month}-${p.day}`, time: `${p.hour}:${p.minute}`, dow: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(p.weekday) };
+}
+async function runReminders(env, origin) {
+  const rems = (await env.READS.get("reminders", "json")) || [];
+  if (!rems.length) return 0;
+  const fired = (await env.READS.get("rfired", "json")) || {}, due = [];
+  for (const back of [1, 0]) { // الدقيقة الحالية + اللي قبلها، لو الاستدعاء اتأخر ثواني
+    const now = cairo(back), stamp = now.date + " " + now.time;
+    for (const r of rems) {
+      if (r.on === false || r.time !== now.time || fired[r.id] === stamp || due.some((d) => d.id === r.id)) continue;
+      if (!(r.date ? r.date === now.date : (r.days || []).includes(now.dow))) continue;
+      fired[r.id] = stamp; due.push(r);
+    }
+  }
+  if (!due.length) return 0;
+  for (const id of Object.keys(fired)) if (!rems.some((r) => r.id === id)) delete fired[id];
+  await env.READS.put("rfired", JSON.stringify(fired));
+  await notify(env, origin, "system", due.map((r) => r.text).join(" • "), null);
+  return due.length;
+}
+
 export async function onRequestGet({ request, env }) {
   const q = new URL(request.url).searchParams;
+  if (q.has("cron")) {
+    if (q.get("cron") !== (await cronKey(env))) return err("مفتاح غلط", 403);
+    return json({ ok: true, sent: await runReminders(env, new URL(request.url).origin) });
+  }
   if (q.has("vapid")) return json({ key: (await vapid(env)).pub });
   if (q.has("last")) {
     const u = ((await env.READS.get("subs", "json")) || {})[q.get("ep") || ""];
@@ -94,7 +127,8 @@ export async function onRequestGet({ request, env }) {
 export async function onRequestPost({ request, env, waitUntil }) {
   let b; try { b = await request.json(); } catch { return err("طلب غلط"); }
   const idx = (await env.READS.get("users", "json")) || [];
-  const reply = async (x = {}) => json({ ...(await state(env)), ...x });
+  let adm = false;
+  const reply = async (x = {}) => json({ ...(await state(env)), ...(adm ? { cronKey: await cronKey(env) } : {}), ...x });
 
   if (b.action === "setup") {
     if (idx.length) return err("الموقع متجهز قبل كده", 403);
@@ -154,6 +188,8 @@ export async function onRequestPost({ request, env, waitUntil }) {
     return reply();
   }
   if (!me.admin) return err("للمدير فقط", 403);
+  adm = true;
+  if (b.action === "remInfo") return reply();
   if (b.action.startsWith("rem")) {
     const rems = (await env.READS.get("reminders", "json")) || [];
     if (b.action === "remAdd") {
