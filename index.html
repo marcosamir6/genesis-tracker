@@ -32,13 +32,17 @@ thead th{padding:10px 4px;font-size:.95rem;overflow-wrap:anywhere;position:stick
 thead th.me{color:var(--done)}
 td.ch,th.ch{position:sticky;right:0;background:var(--card);z-index:1;border-left:1px solid var(--line);width:88px;font-weight:600;color:var(--gold);font-size:.88rem;padding:0 6px}
 thead th.ch{z-index:3}
-.cell{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;width:100%;height:66px;border:0;background:transparent;color:inherit;font:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.cell{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;width:100%;min-height:72px;padding:4px 0;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;border:0;background:transparent;color:inherit;font:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
 div.cell{cursor:default}
 .box{width:32px;height:32px;border:2px solid var(--line);border-radius:8px;display:grid;place-items:center;font-size:1.1rem;font-weight:700;color:transparent}
 button.cell:hover .box{border-color:var(--done)}
 .cell.on .box{background:var(--done);border-color:var(--done);color:var(--card)}.cell.on{background:var(--done-bg)}
 .when{font-size:.6rem;color:var(--muted);line-height:1.2;min-height:.8em;padding:0 2px}
 .cell:focus-visible{outline:3px solid var(--gold);outline-offset:-3px}
+.rx{font-size:.75rem;min-height:.95em;line-height:1}
+#pop{position:fixed;z-index:20;display:flex;gap:2px;padding:6px;background:var(--card);border:1px solid var(--line);border-radius:30px;box-shadow:0 6px 24px rgba(0,0,0,.25)}
+#pop button{background:none;border:0;font-size:1.6rem;padding:4px 9px;border-radius:20px;cursor:pointer;color:var(--ink)}#pop button.sel{background:var(--done-bg)}
+.card label{display:inline-block;margin:0 0 8px 12px}
 .stat{padding:14px 4px;font-size:1.15rem;font-weight:700}
 .adm td{padding:10px 12px;text-align:start}.adm small{color:var(--muted)}
 .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:14px}
@@ -95,14 +99,14 @@ function grid(rows, kind, keyOf) {
     const key = keyOf(id);
     h += `<tr><td class="ch">${label}</td>`;
     for (const u of U) {
-      const t = u[f][key], inner = `<span class="box">✓</span><span class="when">${t ? fmt(t) : ""}</span>`;
-      h += `<td>${mine(u) ? `<button class="cell${t ? " on" : ""}" data-k="${kind}" data-key="${key}" aria-pressed="${!!t}">${inner}</button>` : `<div class="cell${t ? " on" : ""}">${inner}</div>`}</td>`;
+      const t = u[f][key], inner = `<span class="box">✓</span><span class="when">${t ? fmt(t) : ""}</span><span class="rx">${t ? rxHtml(u.username, kind, key) : ""}</span>`;
+      h += `<td>${mine(u) ? `<button class="cell${t ? " on" : ""}" data-k="${kind}" data-key="${key}" aria-pressed="${!!t}">${inner}</button>` : `<div class="cell${t ? " on" : ""}"${t && me ? ` data-rx="${u.username}|${kind}|${key}"` : ""}>${inner}</div>`}</td>`;
     }
     h += "</tr>";
   }
   return h + "</tbody></table></div>";
 }
-const hint = () => me ? "" : `<p class="hint">تقدر تشوف قراءة الكل، وسجّل دخولك عشان تعلّم على عمودك إنت.</p>`;
+const hint = () => me ? `<p class="hint">اضغط مطوّلًا على علامة حد تاني عشان تتفاعل معاها ❤️ 👏 🙏</p>` : `<p class="hint">تقدر تشوف قراءة الكل، وسجّل دخولك عشان تعلّم على عمودك إنت.</p>`;
 
 function readV() {
   const opt = (a, b) => BOOKS.slice(a, b).map((x, i) => `<option value="${a + i}"${a + i === book ? " selected" : ""}>${x[0]}</option>`).join("");
@@ -126,7 +130,7 @@ function statsV() {
 }
 const userForm = (id, title, btn, admin) => `<form id="${id}" class="card"><b>${title}</b><input name="name" placeholder="الاسم الظاهر (مثلًا: جرجس)" required><input name="username" placeholder="اسم المستخدم بالإنجليزي (مثلًا girgis)" required dir="ltr" autocapitalize="none"><input name="password" placeholder="كلمة السر" required>${admin ? `<label><input type="checkbox" name="admin"> مدير</label><br><br>` : ""}<button>${btn}</button></form>`;
 function adminV() {
-  return `<div class="wrap"><table class="adm">${S.users.map((u) => `<tr><td>${esc(u.name)} <small>@${u.username}${u.admin ? " · مدير" : ""}</small></td><td><button class="lnk" data-pw="${u.username}">كلمة سر جديدة</button>${u.username === me.username ? "" : ` <button class="lnk red" data-del="${u.username}">حذف</button>`}</td></tr>`).join("")}</table></div>` + userForm("addU", "إضافة حساب جديد", "إضافة", true);
+  return `<div class="wrap"><table class="adm">${S.users.map((u) => `<tr><td>${esc(u.name)} <small>@${u.username}${u.admin ? " · مدير" : ""}</small></td><td><button class="lnk" data-pw="${u.username}">كلمة سر جديدة</button>${u.username === me.username ? "" : ` <button class="lnk red" data-del="${u.username}">حذف</button>`}</td></tr>`).join("")}</table></div>` + userForm("addU", "إضافة حساب جديد", "إضافة", true) + remV();
 }
 const setupV = () => `<p class="hint">أول مرة: اعمل حساب المدير. هيقدر يضيف الباقيين ويمسحهم بعد كده.</p>` + userForm("su", "إنشاء حساب المدير", "إنشاء", false);
 
@@ -160,7 +164,7 @@ async function act(body, bak) {
     msg(er, true);
   }
   busy--;
-  if (!(er && /^(addUser|setup)$/.test(body.action))) render();
+  if (!(er && /^(addUser|setup|remAdd)$/.test(body.action))) render();
   return er;
 }
 
@@ -186,10 +190,49 @@ async function unsubPush() {
   ls.del("push");
 }
 
+const DAYS = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
+function rxHtml(owner, kind, key) {
+  const c = {};
+  for (const u of S.users) { const e = (u.rx || {})[owner + "|" + kind + "|" + key]; if (e) c[e] = (c[e] || 0) + 1; }
+  return Object.entries(c).map(([e, n]) => e + (n > 1 ? num(n) : "")).join(" ");
+}
+function remV() {
+  const rows = (S.reminders || []).map((r) => `<tr><td>${esc(r.text)}<br><small>${r.time} · ${r.date ? r.date : r.days.length === 7 ? "كل يوم" : r.days.map((d) => DAYS[d]).join("، ")}${r.on === false ? " · موقوف" : ""}</small></td><td><button class="lnk" data-rt="${r.id}">${r.on === false ? "تشغيل" : "إيقاف"}</button> <button class="lnk" data-rn="${r.id}">جرّب</button> <button class="lnk red" data-rd="${r.id}">حذف</button></td></tr>`).join("");
+  return `<h3>التذكيرات</h3><p class="hint">بتتبعت بتوقيت القاهرة لكل الأجهزة اللي فعّلت الإشعارات. زر "جرّب" بيبعتها فورًا.</p>` + (rows ? `<div class="wrap"><table class="adm">${rows}</table></div>` : "") +
+    `<form id="addR" class="card"><b>تذكير جديد</b><input name="text" placeholder="نص الرسالة (مثلًا: ميعاد قراءة الإنجيل 📖)" required maxlength="120"><input type="time" name="time" required><div>${DAYS.map((d, i) => `<label><input type="checkbox" name="d${i}" checked> ${d}</label>`).join("")}</div><p class="hint">أو اختار تاريخ محدد (بيتجاهل الأيام):</p><input type="date" name="date"><button>إضافة التذكير</button></form>`;
+}
+let popT = 0, lp = null;
+function showPop(c) {
+  const ref = c.dataset.rx, mine = (S.users.find((x) => x.username === me.username).rx || {})[ref];
+  const old = $("pop"); if (old) old.remove();
+  const p = document.createElement("div"); p.id = "pop"; p.dataset.rx = ref;
+  p.innerHTML = ["❤️", "👏", "🙏"].map((e) => `<button data-em="${e}" class="${mine === e ? "sel" : ""}">${e}</button>`).join("") + (mine ? `<button data-em="">✕</button>` : "");
+  document.body.appendChild(p);
+  const b = c.getBoundingClientRect(), w = p.offsetWidth;
+  p.style.left = Math.max(6, Math.min(innerWidth - w - 6, b.left + b.width / 2 - w / 2)) + "px";
+  p.style.top = Math.max(6, b.top - 56) + "px";
+  popT = Date.now(); if (navigator.vibrate) navigator.vibrate(15);
+}
+function react(ref, em) {
+  const [o, k, ...r] = ref.split("|"), key = r.join("|"), u = S.users.find((x) => x.username === me.username), bak = structuredClone(S);
+  u.rx = u.rx || {}; if (em) u.rx[ref] = em; else delete u.rx[ref];
+  render();
+  const label = k === "read" ? "على قراءتك " + BOOKS[+r[0]][0] + " — " + ((LBL[+r[0]] || [])[r[1] - 1] || "أصحاح " + num(+r[1])) : "على تسجيلك " + (PN[r[1]] || SLOTS.find((x) => x[0] === r[1])[1]);
+  act({ action: "react", owner: o, kind: k, key, emoji: em, label }, bak);
+}
+document.addEventListener("pointerdown", (e) => {
+  const c = e.target.closest("[data-rx]"); if (!c || !me) return;
+  lp = setTimeout(() => { lp = null; showPop(c); }, 450);
+});
+["pointerup", "pointercancel", "pointermove"].forEach((ev) => document.addEventListener(ev, () => { if (lp) { clearTimeout(lp); lp = null; } }, { passive: true }));
+document.addEventListener("contextmenu", (e) => { if (e.target.closest("[data-rx]")) e.preventDefault(); });
+
 document.addEventListener("click", (e) => {
+  const pop = $("pop"); if (pop && Date.now() - popT > 500 && !pop.contains(e.target)) pop.remove();
   const t = e.target.closest("button"); if (!t) return;
   const d = t.dataset;
-  if (d.t) { tab = d.t; render(); }
+  if ("em" in d) { const p = $("pop"); if (p) { react(p.dataset.rx, d.em); p.remove(); } }
+  else if (d.t) { tab = d.t; render(); }
   else if (d.p) { period = d.p; render(); }
   else if (t.id === "bell") enablePush();
   else if (t.id === "in") $("dlg").showModal();
@@ -202,6 +245,9 @@ document.addEventListener("click", (e) => {
   }
   else if (d.pw) { const p = prompt("كلمة السر الجديدة لـ " + d.pw); if (p) act({ action: "passwd", username: d.pw, password: p }); }
   else if (d.del && confirm("تمسح الحساب ده بكل بياناته؟")) act({ action: "delUser", username: d.del });
+  else if (d.rt) act({ action: "remToggle", id: d.rt });
+  else if (d.rn) act({ action: "remNow", id: d.rn });
+  else if (d.rd && confirm("تمسح التذكير ده؟")) act({ action: "remDel", id: d.rd });
 });
 document.addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -209,6 +255,7 @@ document.addEventListener("submit", async (e) => {
   if (f.id === "lf") { const er = await act({ action: "login", ...d }); $("lerr").textContent = er || ""; if (!er) { $("dlg").close(); f.reset(); if ("Notification" in window && Notification.permission === "granted") enablePush(); } }
   else if (f.id === "addU") act({ action: "addUser", ...d, admin: !!d.admin });
   else if (f.id === "su") act({ action: "setup", ...d });
+  else if (f.id === "addR") act({ action: "remAdd", text: d.text, time: d.time, date: d.date || "", days: [0, 1, 2, 3, 4, 5, 6].filter((i) => d["d" + i]) });
 });
 document.addEventListener("change", (e) => {
   if (e.target.id === "book") { book = +e.target.value; ls.set("book", book); render(); }
