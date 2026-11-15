@@ -199,7 +199,9 @@ function rxHtml(owner, kind, key) {
 function remV() {
   const rows = (S.reminders || []).map((r) => `<tr><td>${esc(r.text)}<br><small>${r.time} · ${r.date ? r.date : r.days.length === 7 ? "كل يوم" : r.days.map((d) => DAYS[d]).join("، ")}${r.on === false ? " · موقوف" : ""}</small></td><td><button class="lnk" data-rt="${r.id}">${r.on === false ? "تشغيل" : "إيقاف"}</button> <button class="lnk" data-rn="${r.id}">جرّب</button> <button class="lnk red" data-rd="${r.id}">حذف</button></td></tr>`).join("");
   return `<h3>التذكيرات</h3><p class="hint">بتتبعت بتوقيت القاهرة لكل الأجهزة اللي فعّلت الإشعارات. زر "جرّب" بيبعتها فورًا.</p>` + (rows ? `<div class="wrap"><table class="adm">${rows}</table></div>` : "") +
-    `<form id="addR" class="card"><b>تذكير جديد</b><input name="text" placeholder="نص الرسالة (مثلًا: ميعاد قراءة الإنجيل 📖)" required maxlength="120"><input type="time" name="time" required><div>${DAYS.map((d, i) => `<label><input type="checkbox" name="d${i}" checked> ${d}</label>`).join("")}</div><p class="hint">أو اختار تاريخ محدد (بيتجاهل الأيام):</p><input type="date" name="date"><button>إضافة التذكير</button></form>`;
+    `<form id="addR" class="card"><b>تذكير جديد</b><input name="text" placeholder="نص الرسالة (مثلًا: ميعاد قراءة الإنجيل 📖)" required maxlength="120"><input type="time" name="time" required><div>${DAYS.map((d, i) => `<label><input type="checkbox" name="d${i}" checked> ${d}</label>`).join("")}</div><p class="hint">أو اختار تاريخ محدد (بيتجاهل الأيام):</p><input type="date" name="date"><button>إضافة التذكير</button></form>` +
+    `<div class="card"><b>تشغيل الجدولة</b><p class="hint">التذكيرات المجدولة محتاجة خدمة مجانية (cron-job.org) تفتح الرابط ده كل دقيقة. مرة واحدة بس.</p>` +
+    (S.cronKey ? `<input readonly id="cu" value="${esc(location.origin + "/api/state?cron=" + S.cronKey)}" onclick="this.select()"><p class="hint">الرابط ده سرّي، متشاركوش مع حد.</p>` : `<button class="lnk" data-ci="1">اعرض رابط الجدولة</button>`) + `</div>`;
 }
 let popT = 0, lp = null;
 function showPop(c) {
@@ -220,14 +222,20 @@ function react(ref, em) {
   const label = k === "read" ? "على قراءتك " + BOOKS[+r[0]][0] + " — " + ((LBL[+r[0]] || [])[r[1] - 1] || "أصحاح " + num(+r[1])) : "على تسجيلك " + (PN[r[1]] || SLOTS.find((x) => x[0] === r[1])[1]);
   act({ action: "react", owner: o, kind: k, key, emoji: em, label }, bak);
 }
+let lpX = 0, lpY = 0, swallow = false;
 document.addEventListener("pointerdown", (e) => {
   const c = e.target.closest("[data-rx]"); if (!c || !me) return;
-  lp = setTimeout(() => { lp = null; showPop(c); }, 450);
+  lpX = e.clientX; lpY = e.clientY;
+  if (lp) clearTimeout(lp);
+  lp = setTimeout(() => { lp = null; swallow = true; showPop(c); setTimeout(() => { swallow = false; }, 1500); }, 450);
 });
-["pointerup", "pointercancel", "pointermove"].forEach((ev) => document.addEventListener(ev, () => { if (lp) { clearTimeout(lp); lp = null; } }, { passive: true }));
+document.addEventListener("pointermove", (e) => { if (lp && Math.hypot(e.clientX - lpX, e.clientY - lpY) > 12) { clearTimeout(lp); lp = null; } }, { passive: true });
+["pointerup", "pointercancel"].forEach((ev) => document.addEventListener(ev, () => { if (lp) { clearTimeout(lp); lp = null; } }, { passive: true }));
+document.addEventListener("scroll", () => { if (lp) { clearTimeout(lp); lp = null; } }, { passive: true, capture: true });
 document.addEventListener("contextmenu", (e) => { if (e.target.closest("[data-rx]")) e.preventDefault(); });
 
 document.addEventListener("click", (e) => {
+  if (swallow) { swallow = false; return; }
   const pop = $("pop"); if (pop && Date.now() - popT > 500 && !pop.contains(e.target)) pop.remove();
   const t = e.target.closest("button"); if (!t) return;
   const d = t.dataset;
@@ -245,6 +253,7 @@ document.addEventListener("click", (e) => {
   }
   else if (d.pw) { const p = prompt("كلمة السر الجديدة لـ " + d.pw); if (p) act({ action: "passwd", username: d.pw, password: p }); }
   else if (d.del && confirm("تمسح الحساب ده بكل بياناته؟")) act({ action: "delUser", username: d.del });
+  else if (d.ci) act({ action: "remInfo" });
   else if (d.rt) act({ action: "remToggle", id: d.rt });
   else if (d.rn) act({ action: "remNow", id: d.rn });
   else if (d.rd && confirm("تمسح التذكير ده؟")) act({ action: "remDel", id: d.rd });
