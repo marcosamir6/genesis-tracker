@@ -4,6 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>المتابعة الروحية</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#1d2a44">
+<link rel="icon" href="/icon-192.png">
+<link rel="apple-touch-icon" href="/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@700&family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
@@ -131,7 +135,8 @@ function render() {
   $("auth").innerHTML = me ? `${esc(me.name)} <button class="lnk" id="out">خروج</button>` : `<button class="lnk" id="in">دخول</button>`;
   const T = [["read", "القراءة"], ["pray", "الصلاة"], ["stats", "الإحصاءات"]]; if (me && me.admin) T.push(["admin", "الإدارة"]);
   $("tabs").innerHTML = S.needsSetup ? "" : T.map(([k, l]) => `<button data-t="${k}" class="${tab === k ? "on" : ""}">${l}</button>`).join("");
-  $("view").innerHTML = S.needsSetup ? setupV() : { read: readV, pray: prayV, stats: statsV, admin: adminV }[tab]();
+  const bell = me && !S.needsSetup && "PushManager" in window && ls.get("push") !== "1" ? `<p class="hint"><button class="lnk" id="bell">🔔 فعّل الإشعارات</button> عشان يوصلك تنبيه بصوت لما حد يعلّم قراءة أو صلاة.</p>` : "";
+  $("view").innerHTML = bell + (S.needsSetup ? setupV() : { read: readV, pray: prayV, stats: statsV, admin: adminV }[tab]());
 }
 
 async function load() {
@@ -159,18 +164,41 @@ async function act(body, bak) {
   return er;
 }
 
+const u8 = (s) => Uint8Array.from(atob(s.replace(/-/g, "+").replace(/_/g, "/")), (c) => c.charCodeAt(0));
+const PN = { morning: "صلاة الصباح", evening: "صلاة المساء" };
+function labelOf(kind, key) {
+  const [a, b] = key.split("|");
+  if (kind === "read") return "قرأ " + BOOKS[+a][0] + " — " + ((LBL[+a] || [])[b - 1] || "أصحاح " + num(+b));
+  const s = SLOTS.find((x) => x[0] === b);
+  return "سجّل " + (PN[b] || s[1]) + (a === ymd(new Date()) ? "" : " (" + a + ")");
+}
+async function enablePush() {
+  try {
+    if (!("Notification" in window) || (await Notification.requestPermission()) !== "granted") return msg("لازم تسمح بالإشعارات من إعدادات المتصفح", true);
+    const reg = await navigator.serviceWorker.ready;
+    const { key } = await (await fetch(API + "?vapid=1", { cache: "no-store" })).json();
+    const sub = (await reg.pushManager.getSubscription()) || (await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: u8(key) }));
+    if (!(await act({ action: "subscribe", endpoint: sub.endpoint }))) { ls.set("push", "1"); render(); msg("اتفعّلت الإشعارات ✓"); }
+  } catch { msg("مقدرتش أفعّل الإشعارات", true); }
+}
+async function unsubPush() {
+  try { const s = await (await navigator.serviceWorker.ready).pushManager.getSubscription(); if (s) await api("POST", { action: "unsubscribe", endpoint: s.endpoint }); } catch {}
+  ls.del("push");
+}
+
 document.addEventListener("click", (e) => {
   const t = e.target.closest("button"); if (!t) return;
   const d = t.dataset;
   if (d.t) { tab = d.t; render(); }
   else if (d.p) { period = d.p; render(); }
+  else if (t.id === "bell") enablePush();
   else if (t.id === "in") $("dlg").showModal();
   else if (t.id === "cx") $("dlg").close();
-  else if (t.id === "out") { me = null; ls.del("me"); render(); }
+  else if (t.id === "out") { unsubPush().finally(() => { me = null; ls.del("me"); render(); }); }
   else if (d.key) {
     const u = S.users.find((x) => x.username === me.username), f = d.k === "read" ? "reads" : "prayers", on = !u[f][d.key], bak = structuredClone(S);
     if (on) u[f][d.key] = new Date().toISOString(); else delete u[f][d.key];
-    render(); act({ action: "set", kind: d.k, key: d.key, done: on }, bak);
+    render(); act({ action: "set", kind: d.k, key: d.key, done: on, label: on ? labelOf(d.k, d.key) : "" }, bak);
   }
   else if (d.pw) { const p = prompt("كلمة السر الجديدة لـ " + d.pw); if (p) act({ action: "passwd", username: d.pw, password: p }); }
   else if (d.del && confirm("تمسح الحساب ده بكل بياناته؟")) act({ action: "delUser", username: d.del });
@@ -178,7 +206,7 @@ document.addEventListener("click", (e) => {
 document.addEventListener("submit", async (e) => {
   e.preventDefault();
   const f = e.target, d = Object.fromEntries(new FormData(f));
-  if (f.id === "lf") { const er = await act({ action: "login", ...d }); $("lerr").textContent = er || ""; if (!er) { $("dlg").close(); f.reset(); } }
+  if (f.id === "lf") { const er = await act({ action: "login", ...d }); $("lerr").textContent = er || ""; if (!er) { $("dlg").close(); f.reset(); if ("Notification" in window && Notification.permission === "granted") enablePush(); } }
   else if (f.id === "addU") act({ action: "addUser", ...d, admin: !!d.admin });
   else if (f.id === "su") act({ action: "setup", ...d });
 });
@@ -187,6 +215,10 @@ document.addEventListener("change", (e) => {
   else if (e.target.id === "pd" && e.target.value) { pdate = e.target.value; render(); }
 });
 
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/sw.js").catch(() => {});
+  navigator.serviceWorker.addEventListener("message", () => load());
+}
 load();
 setInterval(() => { if (!document.hidden) load(); }, 30000);
 document.addEventListener("visibilitychange", () => { if (!document.hidden) load(); });
