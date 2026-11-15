@@ -5,7 +5,11 @@ self.addEventListener("fetch", () => {});
 
 self.addEventListener("push", (e) => e.waitUntil((async () => {
   let text = "فيه تحديث جديد";
-  try { const j = await (await fetch("/api/state?last=1", { cache: "no-store" })).json(); if (j.text) text = j.text; } catch {}
+  try {
+    const s = await self.registration.pushManager.getSubscription();
+    const j = await (await fetch("/api/state?last=1&ep=" + encodeURIComponent(s ? s.endpoint : ""), { cache: "no-store" })).json();
+    if (j.text) text = j.text;
+  } catch {}
   await self.registration.showNotification("المتابعة الروحية", { body: text, icon: "/icon-192.png", badge: "/icon-192.png", lang: "ar", dir: "rtl", vibrate: [120, 60, 120] });
   for (const c of await self.clients.matchAll({ type: "window" })) c.postMessage("refresh");
 })()));
