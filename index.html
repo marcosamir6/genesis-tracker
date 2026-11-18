@@ -17,7 +17,7 @@
 body{margin:0;background:var(--paper);color:var(--ink);font-family:Cairo,system-ui,sans-serif;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
 header{max-width:760px;margin:0 auto;padding:22px 14px 4px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
 h1{font-family:Amiri,serif;font-size:2rem;margin:0;line-height:1.3}
-#auth{font-size:.85rem;white-space:nowrap;padding-top:8px}
+#auth{font-size:.85rem;white-space:nowrap;padding-top:6px;display:flex;align-items:center;gap:6px}
 main{max-width:760px;margin:0 auto;padding:6px 10px 40px}
 .lnk{background:none;border:0;color:var(--done);font:inherit;font-weight:600;cursor:pointer;padding:4px}.lnk.red{color:var(--red)}
 .tabs{display:flex;gap:6px;margin:10px 0}
@@ -51,6 +51,31 @@ button.go,.card button:not(.lnk),dialog button:not(.lnk){padding:10px 16px;borde
 dialog{border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink);width:min(92vw,340px)}
 dialog h3{margin:0 0 12px}.err,#status.err{color:var(--red)}.err{font-size:.85rem;min-height:1.2em}
 #status{font-size:.78rem;color:var(--muted);min-height:1.2em}
+button.cell.lock{cursor:not-allowed;opacity:.55}.cell.lock .box{color:var(--muted);font-size:1rem;background:var(--paper)}
+.sh{padding:10px 2px}.sub{font-size:.68rem;color:var(--muted);line-height:1.3}.sub b{color:var(--ink)}.lvl{font-size:2rem;line-height:1.1}
+.bar{display:block;height:6px;border-radius:4px;background:var(--line);margin:4px 8px;overflow:hidden}.bar b{display:block;height:100%;background:linear-gradient(90deg,#f2b705,#ff8a3d);border-radius:4px}
+tr.tot td{background:var(--done-bg)}
+.podium{direction:ltr;display:flex;justify-content:center;align-items:flex-end;gap:8px;margin:6px 0 16px;padding:14px 8px 0;background:linear-gradient(rgba(79,160,255,.16),transparent);border-radius:16px}
+.pl{flex:1;max-width:150px;display:flex;flex-direction:column;align-items:center;direction:rtl;text-align:center}
+.pl .nm{font-weight:700;font-size:.95rem;overflow-wrap:anywhere}
+.pl .blk{width:100%;border-radius:12px 12px 0 0;display:flex;flex-direction:column;align-items:center;padding-top:8px;color:#1d2a44;font-weight:700}
+.blk b{font-size:1.8rem;line-height:1}.blk span{font-size:.78rem}
+.g1 .blk{background:linear-gradient(#ffd84d,#f2b705);height:136px}.g2 .blk{background:linear-gradient(#e6ebf2,#aeb7c4);height:108px}.g3 .blk{background:linear-gradient(#e6a972,#c27a3a);height:92px}
+.g1 .av{animation:bob 1.6s ease-in-out infinite}@keyframes bob{50%{transform:translateY(-6px)}}
+.rest{font-size:.85rem;color:var(--muted);text-align:center;margin:-6px 0 12px}.pod-empty{text-align:center}
+#toast{position:fixed;left:50%;bottom:calc(28px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:30;background:var(--ink);color:var(--paper);padding:12px 18px;border-radius:30px;font-weight:700;box-shadow:0 8px 28px rgba(0,0,0,.3);max-width:90vw;text-align:center;white-space:pre-line;display:none;animation:pop .35s ease}
+#toast.big{background:linear-gradient(135deg,#f2b705,#ff8a3d);color:#1d2a44;font-size:1.05rem;padding:16px 22px}
+@keyframes pop{from{transform:translate(-50%,20px) scale(.8);opacity:0}}
+@media (prefers-reduced-motion:reduce){.g1 .av,#toast{animation:none}}
+.flame{display:inline-flex;align-items:center;gap:3px;background:none;border:0;font:inherit;font-weight:800;font-size:1.05rem;cursor:pointer;padding:2px 4px;color:#ff6a1a}.flame.off{color:var(--muted)}
+.flame.on svg,.fl-on{animation:flick 1.3s ease-in-out infinite;transform-origin:50% 90%}@keyframes flick{50%{transform:scale(1.09) rotate(-3deg)}}
+@media (max-width:420px){h1{font-size:1.5rem}}
+#sdlg{width:min(94vw,420px);max-height:90vh;overflow:auto}.st-top{display:flex;align-items:center;gap:12px;margin-bottom:8px}.st-top .big{font-size:1.5rem;font-weight:800;line-height:1.2}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;direction:rtl;margin:6px 0}.cal .hd{font-size:.72rem;color:var(--muted);text-align:center}
+.cd{min-height:46px;border-radius:10px;border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:.72rem;line-height:1.15}
+.cd span{color:var(--muted)}.cd i{font-style:normal;font-weight:700;color:var(--ink)}.cd.on{background:linear-gradient(#fff1d6,#ffd9a8);border-color:#ffb84d}.cd.on span{color:#7a4a00}
+.cd.part{background:var(--done-bg)}.cd.today{outline:2px solid var(--gold)}.cd.fut{opacity:.35}.cd.blank{border:0}
+.cn{display:flex;justify-content:space-between;align-items:center;font-weight:700;margin-top:10px}
 </style>
 </head>
 <body>
@@ -67,6 +92,7 @@ dialog h3{margin:0 0 12px}.err,#status.err{color:var(--red)}.err{font-size:.85re
   <div id="lerr" class="err"></div>
   <button>دخول</button> <button type="button" class="lnk" id="cx">إلغاء</button>
 </form></dialog>
+<dialog id="sdlg"></dialog>
 <script>
 const API = "/api/state";
 const BOOKS = "سفر تكوين:50,سفر خروج:40,سفر لاويين:27,سفر عدد:36,سفر تثنية:34,سفر يشوع:24,سفر قضاه:21,سفر راعوث:4,سفر صموئيل أول:31,سفر صموئيل ثاني:24,سفر ملوك أول:22,سفر ملوك ثاني:25,سفر أخبار أيام أول:29,سفر أخبار أيام ثاني:36,سفر عزرا:10,سفر نحميا:13,سفر طوبيت:14,سفر يهوديت:16,سفر أستير + تتمة أستير:17,سفر أيوب:42,سفر مزامير + مز151:151,سفر أمثال:31,سفر الجامعة:12,سفر نشيد الأنشاد:8,سفر الحكمة:19,سفر يشوع ابن سيراخ:51,سفر إشعياء:66,سفر إرميا:52,سفر مراثي إرميا:5,سفر نبوة باروخ:6,سفر حزقيال:48,سفر دانيال + تتمة دانيال:15,سفر هوشع:14,سفر يوئيل:3,سفر عاموس:9,سفر عوبديا:1,سفر يونان:4,سفر ميخا:7,سفر ناحوم:3,سفر حبقوق:3,سفر صفنيا:3,سفر حجي:2,سفر زكريا:14,سفر ملاخي:4,سفر مكابيين أول:16,سفر مكابيين ثاني:15,إنجيل متى:28,إنجيل مرقس:16,إنجيل لوقا:24,إنجيل يوحنا:21,سفر أعمال الرسل:28,الرسالة إلى أهل رومية:16,الرسالة الأولى إلى أهل كورنثوس:16,الرسالة الثانية إلى أهل كورنثوس:13,الرسالة إلى أهل غلاطية:6,الرسالة إلى أهل أفسس:6,الرسالة إلى أهل فيلبى:4,الرسالة إلى أهل كولوسي:4,الرسالة الأولى إلى أهل تسالونيكي:5,الرسالة الثانية إلى أهل تسالونيكي:3,الرسالة الأولى إلى تيموثاوس:6,الرسالة الثانية إلى تيموثاوس:4,الرسالة إلى تيطس:3,الرسالة إلى فليمون:1,الرسالة إلى عبرانيين:13,رسالة يعقوب الرسول:5,رسالة بطرس الأولى:5,رسالة بطرس الثانية:3,رسالة يوحنا الأولى:5,رسالة يوحنا الثانية:1,رسالة يوحنا الثالثة:1,رسالة يهوذا:1,سفر رؤيا يوحنا:22".split(",").map(s => { const [n, c] = s.split(":"); return [n, +c]; });
@@ -92,7 +118,7 @@ async function api(method, body) {
   return j;
 }
 
-function grid(rows, kind, keyOf) {
+function grid(rows, kind, keyOf, locked) {
   const U = S.users, f = kind === "read" ? "reads" : "prayers", mine = (u) => me && u.username === me.username;
   let h = `<div class="wrap"><table><thead><tr><th class="ch"></th>${U.map((u) => `<th class="${mine(u) ? "me" : ""}">${esc(u.name)}</th>`).join("")}</tr></thead><tbody>`;
   for (const [label, id] of rows) {
@@ -100,7 +126,7 @@ function grid(rows, kind, keyOf) {
     h += `<tr><td class="ch">${label}</td>`;
     for (const u of U) {
       const t = u[f][key], inner = `<span class="box">✓</span><span class="when">${t ? fmt(t) : ""}</span><span class="rx">${t ? rxHtml(u.username, kind, key) : ""}</span>`;
-      h += `<td>${mine(u) ? `<button class="cell${t ? " on" : ""}" data-k="${kind}" data-key="${key}" aria-pressed="${!!t}">${inner}</button>` : `<div class="cell${t ? " on" : ""}"${t && me ? ` data-rx="${u.username}|${kind}|${key}"` : ""}>${inner}</div>`}</td>`;
+      h += `<td>${mine(u) && !t && locked && locked.has(id) ? `<button class="cell lock" disabled aria-label="مقفول"><span class="box">🔒</span><span class="when">مقفول</span></button>` : mine(u) ? `<button class="cell${t ? " on" : ""}" data-k="${kind}" data-key="${key}" aria-pressed="${!!t}">${inner}</button>` : `<div class="cell${t ? " on" : ""}"${t && me ? ` data-rx="${u.username}|${kind}|${key}"` : ""}>${inner}</div>`}</td>`;
     }
     h += "</tr>";
   }
@@ -109,24 +135,34 @@ function grid(rows, kind, keyOf) {
 const hint = () => me ? `<p class="hint">اضغط مطوّلًا على علامة حد تاني عشان تتفاعل معاها ❤️ 👏 🙏</p>` : `<p class="hint">تقدر تشوف قراءة الكل، وسجّل دخولك عشان تعلّم على عمودك إنت.</p>`;
 
 function readV() {
-  const opt = (a, b) => BOOKS.slice(a, b).map((x, i) => `<option value="${a + i}"${a + i === book ? " selected" : ""}>${x[0]}</option>`).join("");
-  const rows = Array.from({ length: BOOKS[book][1] }, (_, i) => [(LBL[book] || [])[i] || "أصحاح " + num(i + 1), i + 1]);
-  return `<select id="book"><optgroup label="العهد القديم">${opt(0, OT)}</optgroup><optgroup label="الأناجيل">${opt(OT, OT + 4)}</optgroup><optgroup label="أعمال الرسل والرسائل والرؤيا">${opt(OT + 4, BOOKS.length)}</optgroup></select>` + hint() + grid(rows, "read", (c) => book + "|" + c);
+  const mu = me && S.users.find((x) => x.username === me.username), dn = mu ? doneBooks(mu) : [];
+  const opt = (a, b) => BOOKS.slice(a, b).map((x, i) => `<option value="${a + i}"${a + i === book ? " selected" : ""}>${dn[a + i] ? "✅ " : ""}${x[0]}</option>`).join("");
+  const N = BOOKS[book][1], rows = Array.from({ length: N }, (_, i) => [(LBL[book] || [])[i] || "أصحاح " + num(i + 1), i + 1]);
+  const locked = new Set(); let ok = true, have = 0;
+  if (mu) for (let c = 1; c <= N; c++) { if (mu.reads[book + "|" + c]) have++; else { if (!ok) locked.add(c); ok = false; } }
+  const info = mu ? `<p class="hint">${dn[book] ? "✅ خلّصت السفر ده، عاش يا بطل! 🏆" : `تقدمك في السفر: ${num(have)} من ${num(N)} · الأصحاحات بتتفتح بالترتيب 🔒`}</p>` : "";
+  return `<select id="book"><optgroup label="العهد القديم">${opt(0, OT)}</optgroup><optgroup label="الأناجيل">${opt(OT, OT + 4)}</optgroup><optgroup label="أعمال الرسل والرسائل والرؤيا">${opt(OT + 4, BOOKS.length)}</optgroup></select>` + info + hint() + grid(rows, "read", (c) => book + "|" + c, locked);
 }
 function prayV() {
   return `<input type="date" id="pd" value="${pdate}" max="${ymd(new Date())}">` + hint() + grid(SLOTS.map(([k, l]) => [l, k]), "pray", (s) => pdate + "|" + s);
 }
 function statsV() {
-  const now = new Date(), pre = period === "day" ? ymd(now) : period === "month" ? ymd(now).slice(0, 7) : String(now.getFullYear());
-  const C = S.users.map((u) => {
-    const c = { chap: Object.values(u.reads).filter((t) => ymd(new Date(t)).startsWith(pre)).length };
-    for (const k in u.prayers) { const [d, s] = k.split("|"); if (d.startsWith(pre)) c[s] = (c[s] || 0) + 1; }
-    return c;
-  });
+  const C = S.users.map((u) => counts(u, period)), st = STEPS[period];
   const rows = [["chap", "أصحاحات مقروءة"], ...SLOTS.map(([k, l]) => [k, k === "morning" || k === "evening" ? "صلاة " + l.replace("ًا", "ا").replace("ءً", "اء") : l])];
   const tabs = [["day", "اليوم"], ["month", "الشهر"], ["year", "السنة"]].map(([k, l]) => `<button data-p="${k}" class="${period === k ? "on" : ""}">${l}</button>`).join("");
-  return `<div class="tabs">${tabs}</div><div class="wrap"><table><thead><tr><th class="ch"></th>${S.users.map((u) => `<th>${esc(u.name)}</th>`).join("")}</tr></thead><tbody>` +
-    rows.map(([k, l]) => `<tr><td class="ch">${l}</td>${C.map((c) => `<td class="stat">${num(c[k] || 0)}</td>`).join("")}</tr>`).join("") + "</tbody></table></div>";
+  const sh = C.map((c) => {
+    const { n, next } = tierOf(c.tot, period), lo = n ? st[n - 1] : 0, pct = next ? Math.round(((c.tot - lo) / (next - lo)) * 100) : 100;
+    return `<td class="sh">${shield(n, 38)}<div class="sub"><b>${n ? "درع " + TIERS[n - 1][0] : "لسه بدون درع"}</b></div><i class="bar"><b style="width:${pct}%"></b></i><div class="sub">${next ? "باقي " + num(next - c.tot) + " للدرع " + TIERS[n][0] : "أعلى درع! 🎉"}</div></td>`;
+  }).join("");
+  const lv = S.users.map((u) => {
+    const nb = doneBooks(u).filter(Boolean).length, L = levelOf(nb);
+    return `<td class="sh"><div class="lvl">${L.cur ? L.cur[2] : "📖"}</div><div class="sub"><b>${L.cur ? L.cur[1] : "لسه في البداية"}</b></div><div class="sub">خلّص ${num(nb)} من ${num(BOOKS.length)} سفر</div><div class="sub">${L.next ? "باقي " + num(L.next[0] - nb) + " للمستوى " + L.next[2] : "أعلى مستوى! 🎉"}</div></td>`;
+  }).join("");
+  const fl = S.users.map((u) => { const z = streakOf(u), t = stTier(z.best); return `<td class="sh"><div class="lvl">${flameSvg(z.lit, 26)}</div><div class="sub"><b>${num(z.cur)} يوم</b></div><div class="sub">أطول سلسلة: ${num(z.best)}</div>${t ? `<div class="sub">${shield(t, 22)}<br>درع ${SK[t - 1][1]}</div>` : ""}</td>`; }).join("");
+  return `<div class="tabs">${tabs}</div>` + podium(C) + `<div class="wrap"><table><thead><tr><th class="ch"></th>${S.users.map((u) => `<th>${esc(u.name)}</th>`).join("")}</tr></thead><tbody>` +
+    rows.map(([k, l]) => `<tr><td class="ch">${l}</td>${C.map((c) => `<td class="stat">${num(c[k] || 0)}</td>`).join("")}</tr>`).join("") +
+    `<tr class="tot"><td class="ch">الإجمالي</td>${C.map((c) => `<td class="stat">${num(c.tot)}</td>`).join("")}</tr><tr><td class="ch">الدرع</td>${sh}</tr><tr><td class="ch">مستوى الكتاب</td>${lv}</tr><tr><td class="ch">الشعلة</td>${fl}</tr></tbody></table></div>` +
+    `<p class="hint">الدروع (${{ day: "اليوم", month: "الشهر", year: "السنة" }[period]}): ${st.map((v, i) => TIERS[i][0] + " " + num(v)).join(" · ")} إنجاز</p><p class="hint">مستويات الكتاب: ${LEVELS.map((l) => l[2] + " " + num(l[0]) + " سفر").join(" · ")}</p>`;
 }
 const userForm = (id, title, btn, admin) => `<form id="${id}" class="card"><b>${title}</b><input name="name" placeholder="الاسم الظاهر (مثلًا: جرجس)" required><input name="username" placeholder="اسم المستخدم بالإنجليزي (مثلًا girgis)" required dir="ltr" autocapitalize="none"><input name="password" placeholder="كلمة السر" required>${admin ? `<label><input type="checkbox" name="admin"> مدير</label><br><br>` : ""}<button>${btn}</button></form>`;
 function adminV() {
@@ -136,10 +172,11 @@ const setupV = () => `<p class="hint">أول مرة: اعمل حساب المد�
 
 function render() {
   if (tab === "admin" && !(me && me.admin)) tab = "read";
-  $("auth").innerHTML = me ? `${esc(me.name)} <button class="lnk" id="out">خروج</button>` : `<button class="lnk" id="in">دخول</button>`;
+  $("auth").innerHTML = me ? `${flameBtn()}${esc(me.name)} <button class="lnk" id="out">خروج</button>` : `<button class="lnk" id="in">دخول</button>`;
   const T = [["read", "القراءة"], ["pray", "الصلاة"], ["stats", "الإحصاءات"]]; if (me && me.admin) T.push(["admin", "الإدارة"]);
   $("tabs").innerHTML = S.needsSetup ? "" : T.map(([k, l]) => `<button data-t="${k}" class="${tab === k ? "on" : ""}">${l}</button>`).join("");
   const bell = me && !S.needsSetup && "PushManager" in window && ls.get("push") !== "1" ? `<p class="hint"><button class="lnk" id="bell">🔔 فعّل الإشعارات</button> عشان يوصلك تنبيه بصوت لما حد يعلّم قراءة أو صلاة.</p>` : "";
+  const sd = $("sdlg"); if (sd && sd.open && me) sd.innerHTML = streakHtml();
   $("view").innerHTML = bell + (S.needsSetup ? setupV() : { read: readV, pray: prayV, stats: statsV, admin: adminV }[tab]());
 }
 
@@ -190,6 +227,105 @@ async function unsubPush() {
   ls.del("push");
 }
 
+const TIERS = [["برونزي", "#c27a3a"], ["فضي", "#aeb7c4"], ["ذهبي", "#f2b705"], ["ماسي", "#38c6e8"]];
+const STEPS = { day: [3, 6, 10, 15], month: [20, 50, 100, 200], year: [200, 500, 1000, 2000] };
+const LEVELS = [[1, "قارئ مبتدئ", "🥉"], [3, "قارئ نشيط", "🥈"], [7, "قارئ متمكن", "🥇"], [15, "قارئ خبير", "💎"], [30, "حكيم الكتاب", "🏆"], [73, "ختمت الكتاب كله", "👑"]];
+const CHEERS = ["برافو عليك يا بطل 💪", "عاش يا بطل! 🌟", "أنت بطل 🏅", "ربنا يبارك حياتك ✨", "كمّل يا مجتهد 📖", "شغل عالي! 👏", "فخورين بيك 🙌", "ما شاء الله عليك 🌹"];
+const PCHEERS = ["ربنا يقبل صلاتك 🙏", "بركة صلاتك معاك ✨", "برافو عليك 👏", "عاش يا بطل 🌟"];
+const rnd = (a) => a[Math.floor(Math.random() * a.length)];
+const prefix = (p) => { const n = new Date(); return p === "day" ? ymd(n) : p === "month" ? ymd(n).slice(0, 7) : String(n.getFullYear()); };
+function counts(u, p) {
+  const pre = prefix(p), c = { chap: Object.values(u.reads).filter((t) => ymd(new Date(t)).startsWith(pre)).length };
+  for (const k in u.prayers) { const [d, s] = k.split("|"); if (d.startsWith(pre)) c[s] = (c[s] || 0) + 1; }
+  c.tot = Object.values(c).reduce((a, b) => a + b, 0);
+  return c;
+}
+function tierOf(total, p) { const s = STEPS[p]; let n = 0; while (n < 4 && total >= s[n]) n++; return { n, next: n < 4 ? s[n] : null }; }
+function doneBooks(u) {
+  return BOOKS.map((b, i) => { for (let c = 1; c <= b[1]; c++) if (!u.reads[i + "|" + c]) return false; return true; });
+}
+function levelOf(n) { let i = -1; LEVELS.forEach((l, k) => { if (n >= l[0]) i = k; }); return { i, cur: LEVELS[i], next: LEVELS[i + 1] || null }; }
+function toast(t, big) {
+  let el = $("toast"); if (!el) { el = document.createElement("div"); el.id = "toast"; document.body.appendChild(el); }
+  el.className = big ? "big" : ""; el.textContent = t; el.style.display = "block"; el.style.animation = "none"; void el.offsetWidth; el.style.animation = "";
+  clearTimeout(el._t); el._t = setTimeout(() => { el.style.display = "none"; }, big ? 4500 : 2200);
+}
+const snap = (u) => ({ st: streakOf(u), done: doneBooks(u), tiers: ["day", "month", "year"].map((p) => tierOf(counts(u, p).tot, p).n) });
+function celebrate(u, d, pre) {
+  const bi = d.k === "read" ? +d.key.split("|")[0] : -1, dn = doneBooks(u);
+  if (bi >= 0 && dn[bi] && !pre.done[bi]) {
+    const a = levelOf(pre.done.filter(Boolean).length), z = levelOf(dn.filter(Boolean).length);
+    return toast("🎉 مبروك! خلّصت " + BOOKS[bi][0] + (z.i > a.i ? "\nوجبت مستوى جديد: " + z.cur[2] + " " + z.cur[1] : ""), true);
+  }
+  const z0 = pre.st, z1 = streakOf(u);
+  if (d.k === "read" && !z0.lit && z1.lit) {
+    const t0 = stTier(z0.cur), t1 = stTier(z1.cur);
+    return toast(t1 > t0 ? "🏅 درع الالتزام " + SK[t1 - 1][1] + "!\nسلسلتك " + num(z1.cur) + " يوم 🔥" : "🔥 الشعلة نوّرت!\nسلسلتك " + num(z1.cur) + " يوم", true);
+  }
+  const P = [["day", "النهارده"], ["month", "الشهر ده"], ["year", "السنة دي"]];
+  for (let i = 2; i >= 0; i--) { const n = tierOf(counts(u, P[i][0]).tot, P[i][0]).n; if (n > pre.tiers[i]) return toast("🛡️ وصلت للدرع " + TIERS[n - 1][0] + " " + P[i][1] + "!", true); }
+  toast(rnd(d.k === "read" ? CHEERS : PCHEERS));
+}
+function shield(n, sz) {
+  const c = n ? (n <= 4 ? TIERS[n - 1][1] : "#a855f7") : "#c9d0dc";
+  const mark = n >= 4 ? `<path d="M20 14l6 7-6 9-6-9z" fill="#fff" opacity=".92"/>` : n ? `<path d="M20 13l2.6 5.5 6 .8-4.4 4.2 1.1 6-5.3-2.9-5.3 2.9 1.1-6-4.4-4.2 6-.8z" fill="#fff" opacity=".92"/>` : `<text x="20" y="28" text-anchor="middle" font-size="16" fill="#fff">?</text>`;
+  return `<svg width="${sz}" height="${Math.round(sz * 1.1)}" viewBox="0 0 40 44" aria-hidden="true"><path d="M20 2L36 8V22C36 32 29 39 20 42C11 39 4 32 4 22V8Z" fill="${c}" stroke="rgba(0,0,0,.25)" stroke-width="2"/><path d="M20 7L31 11V22C31 29 26 34 20 37Z" fill="rgba(255,255,255,.28)"/>${mark}</svg>`;
+}
+function avatar(i, place) {
+  const skin = ["#ffcf9f", "#f3b184", "#ffe0b8", "#e3a077"][i % 4], hair = ["#3b2a20", "#1f1f1f", "#7a4a21", "#c0762b"][i % 4], shirt = ["#ff8a65", "#64b5f6", "#81c784", "#ba68c8"][i % 4];
+  const crown = place === 1 ? `<path d="M22 20L26 4L35 14L40 1L45 14L54 4L58 20Z" fill="#ffc933" stroke="#e0a000" stroke-width="1.5" stroke-linejoin="round"/>` : "";
+  return `<svg class="av" viewBox="0 0 80 90" width="76" height="86" aria-hidden="true"><ellipse cx="40" cy="85" rx="22" ry="4" fill="rgba(0,0,0,.12)"/><path d="M12 82Q40 50 68 82Z" fill="${shirt}"/><circle cx="40" cy="44" r="24" fill="${skin}"/><path d="M16 40Q20 16 40 16Q60 16 64 40Q52 28 40 30Q28 28 16 40Z" fill="${hair}"/><circle cx="31" cy="46" r="3.6" fill="#222"/><circle cx="49" cy="46" r="3.6" fill="#222"/><circle cx="32.2" cy="44.8" r="1.2" fill="#fff"/><circle cx="50.2" cy="44.8" r="1.2" fill="#fff"/><circle cx="24" cy="54" r="4" fill="#ff8f8f" opacity=".55"/><circle cx="56" cy="54" r="4" fill="#ff8f8f" opacity=".55"/><path d="M32 56Q40 64 48 56" stroke="#7a2f2f" stroke-width="2.4" fill="none" stroke-linecap="round"/>${crown}</svg>`;
+}
+function podium(C) {
+  const R = S.users.map((u, i) => ({ u, i, t: C[i].tot })).sort((a, b) => b.t - a.t || a.u.name.localeCompare(b.u.name, "ar")).filter((r) => r.t > 0);
+  if (!R.length) return `<div class="card pod-empty">${avatar(0, 0)}<br>لسه مفيش نشاط في الفترة دي. ابدأ وكن أول بطل! 🌟</div>`;
+  const top = R.slice(0, 3).map((r) => ({ ...r, place: R.findIndex((x) => x.t === r.t) + 1 }));
+  const medal = ["", "🥇", "🥈", "🥉"], order = [1, 0, 2].filter((k) => top[k]);
+  const rest = R.slice(3).map((r) => `${num(R.findIndex((x) => x.t === r.t) + 1)}. ${esc(r.u.name)} (${num(r.t)})`).join(" · ");
+  return `<div class="podium">${order.map((k) => { const r = top[k], pl = Math.min(r.place, 3); return `<div class="pl g${pl}"><div class="nm">${esc(r.u.name)}</div>${avatar(r.i, r.place)}<div class="blk"><b>${medal[pl]}</b><span>المركز ${num(r.place)}</span><span>${num(r.t)} إنجاز</span></div></div>`; }).join("")}</div>${rest ? `<p class="rest">${rest}</p>` : ""}`;
+}
+const GOAL = 3; // عدد الأصحاحات اللي بتنوّر الشعلة كل يوم
+const SK = [[3, "برونزي"], [7, "فضي"], [14, "ذهبي"], [30, "ماسي"], [100, "أسطوري"]];
+const stTier = (n) => SK.filter((x) => n >= x[0]).length;
+const dkey = (back) => { const x = new Date(); x.setHours(12, 0, 0, 0); x.setDate(x.getDate() - back); return ymd(x); };
+const utc = (d) => { const [y, m, dd] = d.split("-").map(Number); return Date.UTC(y, m - 1, dd); };
+function streakOf(u) {
+  const m = {}; for (const t of Object.values(u.reads)) { const d = ymd(new Date(t)); m[d] = (m[d] || 0) + 1; }
+  const ok = (d) => (m[d] || 0) >= GOAL, lit = ok(dkey(0));
+  let cur = 0, b = lit ? 0 : 1; while (ok(dkey(b))) { cur++; b++; }
+  let best = 0, run = 0, prev = null;
+  for (const d of Object.keys(m).filter(ok).sort()) { run = prev && utc(d) - utc(prev) === 864e5 ? run + 1 : 1; best = Math.max(best, run); prev = d; }
+  return { m, cur, best, lit, today: m[dkey(0)] || 0 };
+}
+function flameSvg(on, sz) {
+  const a = on ? "#ff5a1f" : "#b9c0cc", b = on ? "#ffb000" : "#d5dae3", c = on ? "#fff3a8" : "#eceff4";
+  return `<svg width="${sz}" height="${Math.round(sz * 1.25)}" viewBox="0 0 32 40" aria-hidden="true"><path d="M16 1C17 9 27 13 27 25a11 11 0 0 1-22 0C5 19 9 16 11 11c1 3 3 4 4 4C14 9 14 5 16 1Z" fill="${a}"/><path d="M16 15c1 5 7 7 7 13a7 7 0 0 1-14 0c0-3 2-5 3-7 1 2 2 2 3 2-1-3-1-5 1-8Z" fill="${b}"/><path d="M16 26c1 3 4 4 4 7a4 4 0 0 1-8 0c0-2 1-3 2-4 1 1 1 1 2 1z" fill="${c}"/></svg>`;
+}
+function flameBtn() {
+  const u = me && S.users.find((x) => x.username === me.username); if (!u) return "";
+  const z = streakOf(u);
+  return `<button class="flame ${z.lit ? "on" : "off"}" id="flame" aria-label="الشعلة">${flameSvg(z.lit, 20)}<b>${num(z.cur)}</b></button>`;
+}
+let cm = new Date();
+function streakHtml() {
+  const u = S.users.find((x) => x.username === me.username), z = streakOf(u), t = stTier(z.cur), tb = stTier(z.best);
+  const y = cm.getFullYear(), mo = cm.getMonth(), dim = new Date(y, mo + 1, 0).getDate(), off = (new Date(y, mo, 1).getDay() + 1) % 7, tk = dkey(0);
+  const msg = z.lit ? "الشعلة منوّرة النهارده! 🔥 كمّل بكرة عشان تحافظ عليها."
+    : z.cur > 0 ? `باقي ${num(GOAL - z.today)} أصحاح النهارده عشان ما تخسرش سلسلتك!`
+    : z.best > 0 ? "الشعلة انطفت 😢 ابدأ من جديد النهارده، اقرا " + num(GOAL) + " أصحاحات." : "اقرا " + num(GOAL) + " أصحاحات النهارده عشان تولّع شعلتك الأولى 🔥";
+  let cells = ["س", "ح", "ن", "ث", "ر", "خ", "ج"].map((l) => `<div class="hd">${l}</div>`).join("") + '<div class="cd blank"></div>'.repeat(off);
+  for (let d = 1; d <= dim; d++) {
+    const k = y + "-" + String(mo + 1).padStart(2, "0") + "-" + String(d).padStart(2, "0"), n = z.m[k] || 0;
+    cells += `<div class="cd${n >= GOAL ? " on" : n ? " part" : ""}${k === tk ? " today" : ""}${k > tk ? " fut" : ""}"><span>${num(d)}</span>${n >= GOAL ? flameSvg(true, 16) : n ? `<i>${num(n)}</i>` : ""}</div>`;
+  }
+  const nx = SK[t];
+  return `<div class="st-top"><span class="${z.lit ? "fl-on" : ""}">${flameSvg(z.lit, 52)}</span><div><div class="big">${num(z.cur)} يوم</div><div class="sub">سلسلتك الحالية · أطول سلسلة: ${num(z.best)}</div></div></div>
+<div class="sub"><b>النهارده: ${num(Math.min(z.today, GOAL))} من ${num(GOAL)} أصحاحات</b></div><i class="bar"><b style="width:${Math.min(100, Math.round((z.today / GOAL) * 100))}%"></b></i><p class="hint">${msg}</p>
+<div class="st-top">${shield(tb, 34)}<div class="sub"><b>${tb ? "درع الالتزام " + SK[tb - 1][1] : "لسه بدون درع التزام"}</b><br>${nx ? "باقي " + num(nx[0] - z.cur) + " يوم للدرع " + nx[1] : "وصلت لأعلى درع! 🎉"}</div></div>
+<div class="cn"><button class="lnk" data-cm="-1">›</button><span>${cm.toLocaleDateString("ar-EG", { month: "long", year: "numeric" })}</span><button class="lnk" data-cm="1">‹</button></div><div class="cal">${cells}</div>
+<p class="hint">🔥 يوم فيه ${num(GOAL)} أصحاحات أو أكتر · لو فات يوم من غير قراءة السلسلة بتبدأ من الأول. الدروع: ${SK.map((x) => x[1] + " " + num(x[0])).join(" · ")} يوم</p><button data-sx="1">قفل</button>`;
+}
+function openStreak() { cm = new Date(); const d = $("sdlg"); d.innerHTML = streakHtml(); if (!d.open) d.showModal(); }
 const DAYS = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
 function rxHtml(owner, kind, key) {
   const c = {};
@@ -240,6 +376,9 @@ document.addEventListener("click", (e) => {
   const t = e.target.closest("button"); if (!t) return;
   const d = t.dataset;
   if ("em" in d) { const p = $("pop"); if (p) { react(p.dataset.rx, d.em); p.remove(); } }
+  else if (d.cm) { cm = new Date(cm.getFullYear(), cm.getMonth() + +d.cm, 1); $("sdlg").innerHTML = streakHtml(); }
+  else if (d.sx) $("sdlg").close();
+  else if (t.id === "flame") openStreak();
   else if (d.t) { tab = d.t; render(); }
   else if (d.p) { period = d.p; render(); }
   else if (t.id === "bell") enablePush();
@@ -248,8 +387,9 @@ document.addEventListener("click", (e) => {
   else if (t.id === "out") { unsubPush().finally(() => { me = null; ls.del("me"); render(); }); }
   else if (d.key) {
     const u = S.users.find((x) => x.username === me.username), f = d.k === "read" ? "reads" : "prayers", on = !u[f][d.key], bak = structuredClone(S);
+    const pre = on ? snap(u) : null;
     if (on) u[f][d.key] = new Date().toISOString(); else delete u[f][d.key];
-    render(); act({ action: "set", kind: d.k, key: d.key, done: on, label: on ? labelOf(d.k, d.key) : "" }, bak);
+    render(); if (on) celebrate(u, d, pre); act({ action: "set", kind: d.k, key: d.key, done: on, label: on ? labelOf(d.k, d.key) : "" }, bak);
   }
   else if (d.pw) { const p = prompt("كلمة السر الجديدة لـ " + d.pw); if (p) act({ action: "passwd", username: d.pw, password: p }); }
   else if (d.del && confirm("تمسح الحساب ده بكل بياناته؟")) act({ action: "delUser", username: d.del });
