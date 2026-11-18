@@ -151,6 +151,10 @@ export async function onRequestPost({ request, env, waitUntil }) {
     if (!validKey(b.kind, b.key)) return err("بيانات غلط");
     const f = b.kind === "read" ? "reads" : "prayers";
     rec[f] = rec[f] || {};
+    if (b.kind === "read" && b.done && !rec.reads[b.key]) { // الأصحاح مقفول لحد ما اللي قبله يتقري
+      const [bi, c] = b.key.split("|").map(Number);
+      for (let i = 1; i < c; i++) if (!rec.reads[`${bi}|${i}`]) return err("اقرا الأصحاحات اللي قبله الأول 🔒");
+    }
     let added = false;
     if (b.done) { if (!rec[f][b.key]) { rec[f][b.key] = new Date().toISOString(); added = true; } } else delete rec[f][b.key];
     await env.READS.put("user:" + username, JSON.stringify(rec));
